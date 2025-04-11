@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 interface Device {
   id: number;
@@ -38,47 +37,59 @@ export default function AdminDashboard() {
       .then(setPosts);
   }, []);
 
-  const filteredPosts = posts.filter(p => {
+  const filteredPosts = posts.filter(post => {
     if (selectedDevice) {
       const device = devices.find(d => d.device_id === selectedDevice);
-      if (!device || device.id !== p.device_id) return false;
+      if (!device || device.id !== post.device_id) return false;
     }
-  
-    if (activeTab === 'pending') {
-      return p.status === 'pending' || p.status === 'processing';
-    } else if (activeTab === 'completed') {
-      return p.status === 'completed';
-    } else if (activeTab === 'failed') {
-      return p.status === 'failed';
-    }
-  
-    return true;
+
+    if (activeTab === 'all') return true;
+    if (activeTab === 'pending') return post.status.toLowerCase() === 'pending';
+    if (activeTab === 'completed') return post.status.toLowerCase() === 'completed';
+    if (activeTab === 'failed') return post.status.toLowerCase() === 'failed';
+    return false;
   });
 
-  const statusColor = (status: string) => {
-    switch (status) {
+  const formatStatus = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'processing':
+        return 'En cours';
+      case 'pending':
+        return 'En attente';
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'Succès';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'Échec';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  const statusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm text-center font-semibold';
+      case 'failed':
+        return 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm text-center font-semibold';
       case 'pending':
       case 'processing':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm text-center font-semibold';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm text-center font-semibold';
     }
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">🛠️ Tableau de bord administrateur</h1>
+    <div className="p-6 min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">🛠️ Tableau de bord administrateur</h1>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {devices.map(device => (
-          <Card key={device.id} className="cursor-pointer hover:shadow-md" onClick={() => setSelectedDevice(device.device_id)}>
+          <Card key={device.id} className={`cursor-pointer hover:shadow-md transition ${selectedDevice === device.device_id ? 'ring-2 ring-purple-400' : ''}`} onClick={() => setSelectedDevice(device.device_id)}>
             <CardContent className="p-4">
-              <div className="font-semibold text-lg">{device.name}</div>
+              <div className="font-semibold text-lg text-gray-800">{device.name}</div>
               <div className="text-sm text-gray-500">{device.model} • Android {device.platform_version}</div>
-              <div className="text-sm mt-1">📱 ID: {device.device_id}</div>
+              <div className="text-sm mt-1 text-gray-600">📱 ID: {device.device_id}</div>
               <div className="mt-2 text-sm text-gray-700">
                 Comptes: {device.accounts.length > 0 ? device.accounts.join(', ') : 'Aucun'}
               </div>
@@ -88,27 +99,35 @@ export default function AdminDashboard() {
       </div>
 
       <div className="w-full">
-        <div className="flex gap-2 mb-4">
-          <button className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'all' ? 'bg-gray-200' : ''}`} onClick={() => setActiveTab('all')}>Tous</button>
-          <button className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'pending' ? 'bg-gray-200' : ''}`} onClick={() => setActiveTab('pending')}>⏳ En attente</button>
-          <button className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'completed' ? 'bg-gray-200' : ''}`} onClick={() => setActiveTab('completed')}>✅ Succès</button>
-          <button className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'failed' ? 'bg-gray-200' : ''}`} onClick={() => setActiveTab('failed')}>❌ Échec</button>
+        <div className="flex flex-wrap gap-2 mb-6 justify-center">
+          <button className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'all' ? 'bg-gray-200' : 'bg-white'} hover:bg-gray-100`} onClick={() => setActiveTab('all')}>
+            Tous ({posts.length})
+          </button>
+          <button className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'pending' ? 'bg-gray-200' : 'bg-white'} hover:bg-gray-100`} onClick={() => setActiveTab('pending')}>
+            ⏳ En attente ({posts.filter(p => p.status.toLowerCase() === 'pending').length})
+          </button>
+          <button className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'completed' ? 'bg-gray-200' : 'bg-white'} hover:bg-gray-100`} onClick={() => setActiveTab('completed')}>
+            ✅ Succès ({posts.filter(p => p.status.toLowerCase() === 'completed').length})
+          </button>
+          <button className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'failed' ? 'bg-gray-200' : 'bg-white'} hover:bg-gray-100`} onClick={() => setActiveTab('failed')}>
+            ❌ Échec ({posts.filter(p => p.status.toLowerCase() === 'failed').length})
+          </button>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           {filteredPosts.map(post => (
-            <Card key={post.id}>
+            <Card key={post.id} className="hover:shadow transition">
               <CardContent className="p-4">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <div>
-                    <div className="font-medium">📸 {post.post_type.toUpperCase()} pour @{post.account}</div>
+                    <div className="font-medium text-lg text-gray-800">📸 {post.post_type.toUpperCase()} pour @{post.account}</div>
                     <div className="text-sm text-gray-600">Prévu: {new Date(post.scheduled_time).toLocaleString()}</div>
                   </div>
                   <Badge className={statusColor(post.status)}>
-                    {post.status === 'processing' ? 'en cours' : post.status}
+                    {formatStatus(post.status)}
                   </Badge>
                 </div>
-                <div className="mt-1 text-sm text-gray-500">{post.caption}</div>
+                <div className="mt-2 text-sm text-gray-500">{post.caption}</div>
               </CardContent>
             </Card>
           ))}

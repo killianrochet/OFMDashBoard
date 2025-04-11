@@ -144,19 +144,22 @@ def schedule_post():
 
 @app.route('/posts', methods=['GET'])
 def get_posts():
-    device_id = request.args.get('device_id')
-    posts = db.get_all_posts(int(device_id) if device_id else None)
-    return jsonify([{
-        'id': post[0],
-        'device_id': post[1],
-        'scheduled_time': post[2],
-        'media_path': post[3],
-        'caption': post[4],
-        'post_type': post[5],
-        'status': post[6],
-        'created_at': post[7],
-        'account': post[8] if len(post) > 8 else None
-    } for post in posts])
+    posts = db.get_all_posts()
+    result = []
+    for post in posts:
+        post_id, device_id, scheduled_time, media_path, caption, post_type, account, status, created_at = post
+        result.append({
+            "id": post_id,
+            "device_id": device_id,
+            "scheduled_time": scheduled_time,
+            "media_path": media_path,
+            "caption": caption,
+            "post_type": post_type,
+            "account": account,
+            "status": status,
+            "created_at": created_at
+        })
+    return jsonify(result)
 
 @app.route('/accounts', methods=['GET'])
 def get_accounts():
