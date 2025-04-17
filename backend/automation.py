@@ -92,21 +92,18 @@ class InstagramAutomation:
         try:
             logger.info("👤 Récupération des comptes Instagram")
 
-            # Aller sur le profil
             profile_icon = self.wait.until(EC.presence_of_element_located((
                 AppiumBy.XPATH, "//android.widget.ImageView[@resource-id='com.instagram.android:id/tab_avatar']"
             )))
             profile_icon.click()
             time.sleep(1)
 
-            # Ouvrir le menu déroulant
             dropdown = self.wait.until(EC.presence_of_element_located((
                 AppiumBy.XPATH, "//android.widget.LinearLayout[@resource-id='com.instagram.android:id/action_bar_title_and_icons']"
             )))
             dropdown.click()
             time.sleep(1)
 
-            # Récupération des éléments du menu
             all_items = self.driver.find_elements(AppiumBy.XPATH, "//android.view.ViewGroup[@content-desc]")
             usernames = []
 
@@ -125,7 +122,6 @@ class InstagramAutomation:
 
             logger.info(f"📦 Comptes trouvés : {usernames}")
 
-            # ✅ Revenir à l'écran d'accueil
             try:
                 logger.info("🏠 Retour à l'écran principal Instagram...")
                 blank_area = self.wait.until(EC.presence_of_element_located((
@@ -173,8 +169,6 @@ class InstagramAutomation:
             logger.debug("🧭 Recherche des comptes disponibles dans le menu déroulant")
             all_accounts = self.driver.find_elements(AppiumBy.XPATH, "//android.view.ViewGroup[@content-desc]")
             logger.info(f"📦 {len(all_accounts)} éléments trouvés dans le menu de comptes")
-            self.driver.save_screenshot(f"screenshot_switch_fail_{self.device_id}.png")
-
 
             if not all_accounts:
                 print("⚠️ Aucun élément trouvé avec le content-desc. Vérifie si la fenêtre est bien ouverte.")
@@ -198,9 +192,6 @@ class InstagramAutomation:
 
         except Exception as e:
             logger.error(f"❌ Erreur lors du changement de compte : {e}")
-            screenshot_path = f"switch_to_account_fail_{self.device_id}.png"
-            self.driver.save_screenshot(screenshot_path)
-            logger.info(f"📸 Capture enregistrée : {screenshot_path}")
             raise
 
 

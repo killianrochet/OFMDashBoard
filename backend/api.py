@@ -96,7 +96,7 @@ def scan_devices():
             for i, username in enumerate(usernames):
                 db.insert_account(device['device_id'], username)
 
-            # ✅ Définir le premier compte comme actif
+            #Compte actif
             if usernames:
                 db.set_active_account(device['device_id'], usernames[0])
                 logger.info(f"✅ Compte actif défini pour {device['device_id']} : {usernames[0]}")
